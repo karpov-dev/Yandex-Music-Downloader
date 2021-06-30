@@ -1,6 +1,7 @@
 import eyed3
 import os
 from Log import log
+from Folder import folder_count
 
 
 class Song:
@@ -24,7 +25,7 @@ class Song:
         return self.path_with_folder(path) + '/' + self.track_name()
 
     def path_with_folder(self, path):
-        return path + '/' + self.artists()[0].upper()
+        return path + '/' + self.artists()[0].upper() + ' (' + str(folder_count(path)) + ')'
 
     def download(self, path):
         if self.is_exists(path):
@@ -65,3 +66,6 @@ class Song:
             song.tag.save()
         except Exception as error:
             log(self.track_name(), 'METADATA ERROR', error)
+
+    def normalize_string(self, string_to_normalize):
+        return string_to_normalize.replace('\'', '').replace('?', '').replace('/', '')

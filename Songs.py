@@ -1,6 +1,7 @@
 from Log import log
 from Song import Song
 from Counter import Counter
+from Folder import rename_with_count
 
 
 def sort_key(track):
@@ -23,9 +24,6 @@ class Songs:
             full_info = base_info.fetch_track()
             self.tracks.append(full_info)
             log(str(counter), 'FETCH SUCCESS', full_info)
-
-            if counter == 30:
-                break
 
         log('ALL TRACKS', 'FETCHING DATA SUCCESS', None)
 
