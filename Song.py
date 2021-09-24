@@ -1,7 +1,8 @@
+import urllib.request
 import eyed3
+import urllib.request
 import os
 from Log import log
-from Folder import folder_count
 
 
 class Song:
@@ -19,13 +20,13 @@ class Song:
         return artists
 
     def track_name(self):
-        return self.artists() + ' - ' + self.describe.title + '.mp3'
+        return self.normalize_string(self.artists()) + ' - ' + self.normalize_string(self.describe.title) + '.mp3'
 
     def full_path(self, path):
         return self.path_with_folder(path) + '/' + self.track_name()
 
     def path_with_folder(self, path):
-        return path + '/' + self.artists()[0].upper() + ' (' + str(folder_count(path)) + ')'
+        return path + '/' + self.normalize_string(self.artists()[0].upper())
 
     def download(self, path):
         if self.is_exists(path):
@@ -68,4 +69,9 @@ class Song:
             log(self.track_name(), 'METADATA ERROR', error)
 
     def normalize_string(self, string_to_normalize):
-        return string_to_normalize.replace('\'', '').replace('?', '').replace('/', '')
+        string_to_normalize = string_to_normalize.replace('\'', '')
+        string_to_normalize = string_to_normalize.replace('?', '')
+        string_to_normalize = string_to_normalize.replace('/', '')
+        string_to_normalize = string_to_normalize.replace('!', '')
+        string_to_normalize = string_to_normalize.replace(':', '')
+        return string_to_normalize

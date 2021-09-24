@@ -5,7 +5,7 @@ from Folder import rename_with_count
 
 
 def sort_key(track):
-    return track.title
+    return track.artists[0].name
 
 
 class Songs:
