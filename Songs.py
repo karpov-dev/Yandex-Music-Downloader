@@ -22,7 +22,6 @@ class Songs:
         for base_info in self.liked_songs:
             counter += 1
             full_info = base_info.fetch_track()
-            print(full_info)
             self.tracks.append(full_info)
             self.logger.message(str(counter) + '/' + str(len(self.liked_songs)) + ' : (' + str(round(counter / len(self.liked_songs), 3)) + '%) ' + ': ' + full_info.title)
 
