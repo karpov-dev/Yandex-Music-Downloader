@@ -1,7 +1,5 @@
-from Log import log
+from Logger import Logger
 from Song import Song
-from Counter import Counter
-from Folder import rename_with_count
 
 
 def sort_key(track):
@@ -9,51 +7,41 @@ def sort_key(track):
 
 
 class Songs:
+    logger = {}
     liked_songs = []
     tracks = []
 
     def __init__(self, liked_songs):
         self.liked_songs = liked_songs
+        self.logger = Logger()
 
     def fetch(self):
-        log('ALL TRACKS', 'FETCHING DATA', None)
+        self.logger.message('START FETCHING MUSIC DATA')
 
         counter = 0
         for base_info in self.liked_songs:
             counter += 1
             full_info = base_info.fetch_track()
+            print(full_info)
             self.tracks.append(full_info)
-            log(str(counter), 'FETCH SUCCESS', full_info)
+            self.logger.message(str(counter) + '/' + str(len(self.liked_songs)) + ' : (' + str(round(counter / len(self.liked_songs), 3)) + '%) ' + ': ' + full_info.title)
 
-        log('ALL TRACKS', 'FETCHING DATA SUCCESS', None)
+        self.logger.message('FETCHING DATA WAS SUCCESS')
 
     def sort(self):
-        log('ALL TRACKS', 'SORTING TRACKS', None)
+        self.logger.message('SORTING TRACKS')
         self.tracks = sorted(self.tracks, key=sort_key)
-        log('ALL TRACKS', 'SORTING DONE', None)
+        self.logger.message('SORTING DONE')
 
-    def download(self, path):
+    def download(self):
         self.fetch()
         self.sort()
 
-        errors_counter = []
-        skip_counter = []
-        success_counter = []
-        index_counter = 0
-
+        counter = 0
         for track_full_info in self.tracks:
-            index_counter += 1
+            counter += 1
             song = Song(track_full_info)
-            result = song.download(path)
+            song.download()
+            self.logger.message(str(counter) + '/' + str(len(self.liked_songs)) + ' : (' + str(round(counter / len(self.liked_songs), 3)) + '%) ' + ': ' + track_full_info.title)
 
-            if result == 'EXISTS':
-                skip_counter.append(Counter(str(index_counter), song.track_name(), '---- SKIP ----').print())
-            if result == 'DOWNLOAD ERROR':
-                errors_counter.append(Counter(str(index_counter), song.track_name(), '---- DOWNLOAD ERROR ----').print())
-            if result == 'SUCCESS':
-                success_counter.append(Counter(str(index_counter), song.track_name(), '---- SUCCESS ----').print())
-
-        print('TOTAL: ' + str(index_counter))
-        print('SUCCESS: ' + str(len(success_counter)))
-        print('SKIP: ' + str(len(skip_counter)))
-        print('ERROR: ' + str(len(errors_counter)))
+        self.logger.print_finish_message()

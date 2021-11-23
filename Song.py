@@ -1,77 +1,69 @@
-import urllib.request
 import eyed3
-import urllib.request
-import os
-from Log import log
+from Logger import Logger
+from Service import is_file_exists, create_dir_if_not_exist, delete_service_symbols
+from Config import FILE_SYSTEM_SEPARATOR, MUSIC_FILE_EXTENSION, ROOT_PATH
 
 
 class Song:
+
     describe = {}
+    logger = {}
+    total_tracks = 0
 
-    def __init__(self, describe):
-        self.describe = describe
+    def __init__(self, track_describe):
+        self.describe = track_describe
+        self.logger = Logger()
 
-    def artists(self):
-        artists = ''
+    def download(self):
+        self.__separate_download__()
 
+    def __separate_download__(self):
         for artist in self.describe.artists:
-            artists += artist.name + ' '
+            self.__download_to_artist_folder__(artist.name)
 
-        return artists
+    def __download_to_artist_folder__(self, artist_name):
+        create_dir_if_not_exist(self.__get_path_to_symbol_folder__(artist_name))
+        create_dir_if_not_exist(self.__get_path_to_artist_folder__(artist_name))
 
-    def track_name(self):
-        return self.normalize_string(self.artists()) + ' - ' + self.normalize_string(self.describe.title) + '.mp3'
+        if is_file_exists(self.__get_path_to_track__(artist_name)):
+            self.logger.download_skip(self.__get_track_name_with_artist__(artist_name))
+        else:
+            try:
+                self.describe.download(self.__get_path_to_track__(artist_name))
+                self.prepare_metadata(self.__get_path_to_track__(artist_name), artist_name)
+                self.logger.download_success(self.__get_track_name_with_artist__(artist_name))
+            except Exception as error:
+                self.logger.download_error(self.__get_track_name_with_artist__(artist_name), error)
 
-    def full_path(self, path):
-        return self.path_with_folder(path) + '/' + self.track_name()
+    def __get_path_to_symbol_folder__(self, artist_name):
+        return ROOT_PATH + FILE_SYSTEM_SEPARATOR + delete_service_symbols(artist_name[0].upper())
 
-    def path_with_folder(self, path):
-        return path + '/' + self.normalize_string(self.artists()[0].upper())
+    def __get_path_to_artist_folder__(self, artist_name):
+        return self.__get_path_to_symbol_folder__(artist_name) + FILE_SYSTEM_SEPARATOR + delete_service_symbols(artist_name)
 
-    def download(self, path):
-        if self.is_exists(path):
-            return 'EXISTS'
+    def __get_path_to_track__(self, artist_name):
+        return self.__get_path_to_artist_folder__(artist_name) + FILE_SYSTEM_SEPARATOR + self.__get_track_name__()
 
-        if not self.download_track(path):
-            return 'DOWNLOAD ERROR'
+    def __get_track_name__(self):
+        track_name = delete_service_symbols(self.describe.title)
 
-        self.prepare_metadata(path)
+        if self.describe.version:
+            track_name += '(' + delete_service_symbols(self.describe.version) + ')'
 
-        return 'SUCCESS'
+        track_name += MUSIC_FILE_EXTENSION
 
-    def is_exists(self, path):
-        if not os.path.isdir(self.path_with_folder(path)):
-            os.mkdir(self.path_with_folder(path))
-            return False
-        if os.path.isfile(self.full_path(path)):
-            return True
+        return track_name
 
-    def download_track(self, path):
-        try:
-            self.describe.download(self.full_path(path))
-            return True
-        except Exception as error:
-            log(self.track_name(), 'DOWNLOAD ERROR', error)
-            return False
+    def __get_track_name_with_artist__(self, artist_name):
+        return artist_name + ' - ' + self.__get_track_name__()
 
-    def prepare_metadata(self, path):
-        try:
-            song = eyed3.load(self.full_path(path))
-            song.initTag()
+    def prepare_metadata(self, path, artist_name):
+        song = eyed3.load(path)
+        song.initTag()
 
-            song.tag.artist = self.artists()
-            song.tag.album = self.describe.albums[0].title
-            song.tag.album_artist = self.artists()
-            song.tag.title = self.describe.title
+        song.tag.artist = artist_name
+        song.tag.album = self.describe.albums[0].title
+        song.tag.album_artist = artist_name
+        song.tag.title = self.describe.title
 
-            song.tag.save()
-        except Exception as error:
-            log(self.track_name(), 'METADATA ERROR', error)
-
-    def normalize_string(self, string_to_normalize):
-        string_to_normalize = string_to_normalize.replace('\'', '')
-        string_to_normalize = string_to_normalize.replace('?', '')
-        string_to_normalize = string_to_normalize.replace('/', '')
-        string_to_normalize = string_to_normalize.replace('!', '')
-        string_to_normalize = string_to_normalize.replace(':', '')
-        return string_to_normalize
+        song.tag.save()
