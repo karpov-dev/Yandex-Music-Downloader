@@ -41,6 +41,6 @@ class Songs:
             counter += 1
             song = Song(track_full_info)
             song.download()
-            self.logger.message(str(counter) + '/' + str(len(self.liked_songs)) + ' : (' + str(round(counter / len(self.liked_songs), 3)) + '%) ' + ': ' + track_full_info.title)
+            self.logger.message(str(counter) + '/' + str(len(self.liked_songs)) + ' : (' + str(round(counter / len(self.liked_songs) * 100, 3)) + '%) ' + ': ' + track_full_info.title)
 
         self.logger.print_finish_message()
