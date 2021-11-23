@@ -1,3 +1,5 @@
+import copy
+
 from Logger import Logger
 from Song import Song
 
@@ -24,6 +26,22 @@ class Songs:
             full_info = base_info.fetch_track()
             self.tracks.append(full_info)
             self.logger.message(str(counter) + '/' + str(len(self.liked_songs)) + ' : (' + str(round(counter / len(self.liked_songs) * 100, 3) ) + '%) ' + ': ' + full_info.title)
+
+        print(self.tracks)
+
+        for full_info in self.tracks:
+            if len(full_info.artists) <= 1:
+                continue
+
+            for artist in full_info.artists:
+                song_copy = copy.deepcopy(full_info)
+                song_copy.artists = []
+                song_copy.artists.append(artist)
+                self.tracks.append(song_copy)
+
+            self.tracks.remove(full_info)
+
+        print(self.tracks)
 
         self.logger.message('FETCHING DATA WAS SUCCESS')
 
